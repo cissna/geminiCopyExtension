@@ -21,7 +21,7 @@
       OUTER_WRAP
     ].join("\n");
 
-  const copyConversation = async () => {
+  const extractConversation = () => {
     if (window.location.hostname !== "gemini.google.com") {
       throw new Error("Open a conversation on gemini.google.com first.");
     }
@@ -38,27 +38,23 @@
       throw new Error("No Gemini messages were found on this page.");
     }
 
-    const formattedConversation = buildFormattedConversation(messages);
-
-    await navigator.clipboard.writeText(formattedConversation);
-
     return {
       success: true,
-      messageCount: messages.length
+      text: buildFormattedConversation(messages)
     };
   };
 
-  copyConversation()
-    .then((result) => {
-      window.__geminiCopyResult = result;
-    })
-    .catch((error) => {
-      window.__geminiCopyResult = {
+  window.__extractGeminiConversation = () => {
+    try {
+      return extractConversation();
+    } catch (error) {
+      return {
         success: false,
         error:
           error instanceof Error
             ? error.message
             : "Unable to copy the conversation."
       };
-    });
+    }
+  };
 })();

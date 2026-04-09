@@ -1,6 +1,9 @@
 const copyButton = document.getElementById("copyButton");
 const statusMessage = document.getElementById("status");
 
+const getErrorMessage = (error) =>
+  error instanceof Error ? error.message : "Unable to copy the conversation.";
+
 const showStatus = (message, type) => {
   statusMessage.textContent = message;
   statusMessage.className = type;
@@ -35,30 +38,22 @@ copyButton.addEventListener("click", async () => {
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => {
-        window.__geminiCopyResult = undefined;
-      }
-    });
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
       files: ["content.js"]
     });
 
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => window.__geminiCopyResult
+      func: () => window.__extractGeminiConversation()
     });
 
-    if (!result?.success) {
-      throw new Error(result?.error || "Unable to copy the conversation.");
+    if (!result?.success || !result.text) {
+      throw new Error(result?.error || "Unable to read the conversation.");
     }
 
+    await navigator.clipboard.writeText(result.text);
     showStatus("Copied!", "success");
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to copy the conversation.";
-    showStatus(message, "error");
+    showStatus(getErrorMessage(error), "error");
   } finally {
     setLoadingState(false);
   }
