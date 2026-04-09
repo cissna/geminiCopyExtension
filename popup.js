@@ -35,6 +35,13 @@ copyButton.addEventListener("click", async () => {
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
+      func: () => {
+        window.__geminiCopyResult = undefined;
+      }
+    });
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
       files: ["content.js"]
     });
 
