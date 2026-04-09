@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gemini Chat Copier</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-width: 220px;
+        background: #f7f8fc;
+        color: #1f2937;
+      }
+
+      main {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #4b5563;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        background: #2563eb;
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 16px;
+        transition: background-color 160ms ease;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      button:disabled {
+        background: #93c5fd;
+        cursor: wait;
+      }
+
+      #status {
+        display: none;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      #status.success {
+        color: #047857;
+      }
+
+      #status.error {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div>
+        <h1>Gemini Chat Copier</h1>
+        <p>Copy the open Gemini conversation in the required text format.</p>
+      </div>
+      <button id="copyButton" type="button">Copy Chat</button>
+      <p id="status" aria-live="polite">Copied!</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

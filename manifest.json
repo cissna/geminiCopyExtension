@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini Chat Copier",
+  "version": "1.0.0",
+  "description": "Copy a Gemini conversation into a structured plain-text format.",
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
