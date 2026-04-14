@@ -1,12 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Chat Copier",
-  "version": "1.0.0",
-  "description": "Copy a Gemini conversation into a structured plain-text format.",
+  "name": "Chat Copier",
+  "version": "1.1.0",
+  "description": "Copy conversations from Gemini or HopGPT into a structured plain-text format.",
   "permissions": [
     "activeTab",
     "clipboardWrite",
     "scripting"
+  ],
+  "host_permissions": [
+    "https://gemini.google.com/*",
+    "https://chat.ai.jh.edu/*"
   ],
   "action": {
     "default_popup": "popup.html"

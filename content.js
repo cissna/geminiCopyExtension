@@ -1,27 +1,49 @@
 (() => {
   const OUTER_WRAP = "\"\"\"\"\"\"";
   const INNER_WRAP = "``````";
-  const SELECTOR = "user-query, model-response";
-  const USER_TEXT_SELECTORS = [
-    ".query-text",
-    "user-query-content",
-    "div[class*=\"query-content\"]"
-  ];
-  const ASSISTANT_TEXT_SELECTORS = [
-    "message-content",
-    ".message-content",
-    ".markdown"
-  ];
-  const COMMON_NOISE_LINES = [/^You said$/i, /^Gemini said$/i, /^Show thinking$/i];
-  const ASSISTANT_NOISE_LINES = [/^Sources$/i, /^\+\d+$/];
+  const DISCLAIMER = "[Disclaimer: markdown formatting is lost in the pasted text, but artifacts of triple backtick formatting may include guesses at language names (e.g. python, json, vbnet, etc.) that were not part of the original message. It will be clear, this disclaimer is just to say you can safely disregard]";
 
-  const getRole = (element) =>
-    element.matches("user-query") ? "User" : "Assistant";
+  const SITES_CONFIG = {
+    "gemini.google.com": {
+      name: "Gemini",
+      selector: "user-query, model-response",
+      getRole: (el) => (el.matches("user-query") ? "User" : "Assistant"),
+      textSelectors: {
+        User: [
+          ".query-text",
+          "user-query-content",
+          "div[class*=\"query-content\"]"
+        ],
+        Assistant: [
+          "message-content",
+          ".message-content",
+          ".markdown"
+        ]
+      },
+      noisePatterns: [
+        /^You said$/i,
+        /^Gemini said$/i,
+        /^Show thinking$/i,
+        /^Sources$/i,
+        /^\+\d+$/
+      ]
+    },
+    "chat.ai.jh.edu": {
+      name: "HopGPT",
+      selector: "[aria-label^=\"Message \"]",
+      getRole: (el) => (el.querySelector(".user-turn") ? "User" : "Assistant"),
+      textSelectors: {
+        User: [".message-content"],
+        Assistant: [".message-content"]
+      },
+      noisePatterns: [/Copy code/i]
+    }
+  };
 
-  const getPreferredTextRoot = (element) => {
-    const selectors = element.matches("user-query")
-      ? USER_TEXT_SELECTORS
-      : ASSISTANT_TEXT_SELECTORS;
+  const getConfig = () => SITES_CONFIG[window.location.hostname];
+
+  const getPreferredTextRoot = (element, role, config) => {
+    const selectors = config.textSelectors[role] || [];
 
     for (const selector of selectors) {
       const match = element.querySelector(selector);
@@ -34,43 +56,33 @@
     return element;
   };
 
-  const isNoiseLine = (line, role) => {
+  const isNoiseLine = (line, config) => {
     const normalizedLine = line.trim();
 
     if (!normalizedLine) {
       return false;
     }
 
-    if (COMMON_NOISE_LINES.some((pattern) => pattern.test(normalizedLine))) {
-      return true;
-    }
-
-    if (
-      role === "Assistant" &&
-      ASSISTANT_NOISE_LINES.some((pattern) => pattern.test(normalizedLine))
-    ) {
-      return true;
-    }
-
-    return false;
+    return config.noisePatterns.some((pattern) => pattern.test(normalizedLine));
   };
 
-  const normalizeMessageText = (text, role) =>
+  const normalizeMessageText = (text, config) =>
     text
       .replace(/\r\n/g, "\n")
       .split("\n")
       .map((line) => line.replace(/[ \t]+$/g, ""))
-      .filter((line) => !isNoiseLine(line, role))
+      .filter((line) => !isNoiseLine(line, config))
       .join("\n")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
-  const getMessageText = (element, role) =>
-    normalizeMessageText(getPreferredTextRoot(element).innerText, role);
+  const getMessageText = (element, role, config) =>
+    normalizeMessageText(getPreferredTextRoot(element, role, config).innerText, config);
 
   const buildFormattedConversation = (messages) =>
     [
       OUTER_WRAP,
+      DISCLAIMER,
       ...messages.flatMap(({ role, text }) => [
         `${role}:`,
         INNER_WRAP,
@@ -81,24 +93,26 @@
     ].join("\n");
 
   const extractConversation = () => {
-    if (window.location.hostname !== "gemini.google.com") {
-      throw new Error("Open a conversation on gemini.google.com first.");
+    const config = getConfig();
+
+    if (!config) {
+      throw new Error(`This site (${window.location.hostname}) is not supported.`);
     }
 
-    const elements = Array.from(document.querySelectorAll(SELECTOR));
+    const elements = Array.from(document.querySelectorAll(config.selector));
     const messages = elements
       .map((element) => {
-        const role = getRole(element);
+        const role = config.getRole(element);
 
         return {
           role,
-          text: getMessageText(element, role)
+          text: getMessageText(element, role, config)
         };
       })
       .filter(({ text }) => text.length > 0);
 
     if (messages.length === 0) {
-      throw new Error("No Gemini messages were found on this page.");
+      throw new Error(`No ${config.name} messages were found on this page.`);
     }
 
     return {

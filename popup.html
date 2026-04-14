@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Gemini Chat Copier</title>
+    <title>Chat Copier</title>
     <style>
       :root {
         color-scheme: light;
@@ -29,7 +29,18 @@
         font-weight: 600;
       }
 
-      p {
+      #siteStatus {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #2563eb;
+      }
+
+      #siteStatus.error {
+        color: #b91c1c;
+      }
+
+      p.description {
         margin: 0;
         font-size: 13px;
         line-height: 1.4;
@@ -54,6 +65,10 @@
 
       button:disabled {
         background: #93c5fd;
+        cursor: default;
+      }
+
+      button.loading {
         cursor: wait;
       }
 
@@ -75,11 +90,12 @@
   <body>
     <main>
       <div>
-        <h1>Gemini Chat Copier</h1>
-        <p>Copy the open Gemini conversation in the required text format.</p>
+        <h1>Chat Copier</h1>
+        <p id="siteStatus">Checking...</p>
+        <p class="description">Copy the open conversation in the required text format.</p>
       </div>
-      <button id="copyButton" type="button">Copy Chat</button>
-      <p id="status" aria-live="polite">Copied!</p>
+      <button id="copyButton" type="button" disabled>Copy Chat</button>
+      <p id="status" aria-live="polite"></p>
     </main>
     <script src="popup.js"></script>
   </body>

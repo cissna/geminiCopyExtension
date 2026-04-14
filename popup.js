@@ -1,5 +1,11 @@
 const copyButton = document.getElementById("copyButton");
+const siteStatus = document.getElementById("siteStatus");
 const statusMessage = document.getElementById("status");
+
+const SITES_INFO = {
+  "gemini.google.com": "Gemini Chat Copyable",
+  "chat.ai.jh.edu": "HopGPT Chat Copyable"
+};
 
 const getErrorMessage = (error) =>
   error instanceof Error ? error.message : "Unable to copy the conversation.";
@@ -12,6 +18,7 @@ const showStatus = (message, type) => {
 
 const setLoadingState = (isLoading) => {
   copyButton.disabled = isLoading;
+  copyButton.classList.toggle("loading", isLoading);
   copyButton.textContent = isLoading ? "Copying..." : "Copy Chat";
 };
 
@@ -26,6 +33,28 @@ const getActiveTab = async () => {
   }
 
   return tab;
+};
+
+const validateTab = async () => {
+  try {
+    const tab = await getActiveTab();
+    const url = new URL(tab.url);
+    const info = SITES_INFO[url.hostname];
+
+    if (info) {
+      siteStatus.textContent = info;
+      siteStatus.className = "success";
+      copyButton.disabled = false;
+    } else {
+      siteStatus.textContent = "Invalid URL";
+      siteStatus.className = "error";
+      copyButton.disabled = true;
+    }
+  } catch (error) {
+    siteStatus.textContent = "Invalid URL";
+    siteStatus.className = "error";
+    copyButton.disabled = true;
+  }
 };
 
 copyButton.addEventListener("click", async () => {
@@ -58,3 +87,6 @@ copyButton.addEventListener("click", async () => {
     setLoadingState(false);
   }
 });
+
+// Initialize popup status
+validateTab();
