@@ -1,6 +1,4 @@
 (() => {
-  const OUTER_WRAP = "\"\"\"\"\"\"";
-  const INNER_WRAP = "``````";
   const DISCLAIMER = "[Disclaimer: markdown formatting is lost in the pasted text, but artifacts of triple backtick formatting may include guesses at language names (e.g. python, json, vbnet, etc.) that were not part of the original message. It will be clear, this disclaimer is just to say you can safely disregard]";
 
   const SITES_CONFIG = {
@@ -79,18 +77,35 @@
   const getMessageText = (element, role, config) =>
     normalizeMessageText(getPreferredTextRoot(element, role, config).innerText, config);
 
-  const buildFormattedConversation = (messages) =>
-    [
-      OUTER_WRAP,
+  const getMaxConsecutive = (text, char) => {
+    const regex = new RegExp(`${char}+`, "g");
+    const matches = text.match(regex) || [];
+    return matches.reduce((max, match) => Math.max(max, match.length), 0);
+  };
+
+  const buildFormattedConversation = (messages) => {
+    const allText = messages.map(m => m.text).join("\n");
+    const maxBackticks = getMaxConsecutive(allText, "`");
+    const maxQuotes = getMaxConsecutive(allText, "\"");
+
+    const innerCount = (Math.floor(maxBackticks / 3) + 1) * 3;
+    const outerCount = (Math.floor(maxQuotes / 3) + 1) * 3;
+
+    const innerWrap = "`".repeat(innerCount);
+    const outerWrap = "\"".repeat(outerCount);
+
+    return [
+      outerWrap,
       DISCLAIMER,
       ...messages.flatMap(({ role, text }) => [
         `${role}:`,
-        INNER_WRAP,
+        innerWrap,
         text,
-        INNER_WRAP
+        innerWrap
       ]),
-      OUTER_WRAP
+      outerWrap
     ].join("\n");
+  };
 
   const extractConversation = () => {
     const config = getConfig();
